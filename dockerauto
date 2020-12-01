@@ -1,0 +1,38 @@
+- hosts: all
+  vars_prompt:
+    - name: con_name
+      private: no
+      propmpt: "enter container name !"
+    - name: host_port
+      private: no
+      propmpt: "enter port no!"
+  tasks:
+    - yum_repository: 
+        baseurl: "https://download.docker.com/linux/centos/docer-ce.repo" 
+        name: "dockerz" 
+        description: "docker_image"
+        gpgcheck: no
+    - package:
+        name: "docker-ce"	  
+        state: present
+    - service:
+        name: "docker"
+        state: started
+    - file :
+        path: /root/docker-web
+        state: directory
+    - copy:
+        content: "webpage docker\n"
+        dest: /root/docker-web/index.html
+    - docker_image:
+        name: httpd
+        source: pull
+    - docker_container:
+        name: "{{con_name}}"
+        image: httpd
+        volumes: "/root/docker-web:/usr/local/apache2/htdocs/"
+        ports: "{{host_port}}:80"         
+        state: started
+    - service:
+        name: firewalld
+        state: stopped
